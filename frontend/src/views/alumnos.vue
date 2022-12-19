@@ -19,7 +19,11 @@
 							</div>
 						</div>
 						<div class="col-md-12">
-							<table class="table table-hover">
+							<table
+								class="table table-hover"
+								id="tblAlumnos"
+								width="100% important"
+							>
 								<thead>
 									<tr>
 										<th>Acciones</th>
@@ -39,13 +43,21 @@
 										v-for="(item, index) in alumnos"
 										:key="index"
 									>
-										<td>
-											<div class="btn-group" role="group">
-												<button type="button" class="btn btn-warning">
-													Editar
+										<td align="center">
+											<div class="btn-group text-center" role="group">
+												<button
+													type="button"
+													class="btn btn-warning"
+													@click="Editar(item)"
+												>
+													<vue-feather type="edit"></vue-feather>
 												</button>
-												<button type="button" class="btn btn-warning">
-													Eliminar
+												<button
+													type="button"
+													class="btn btn-danger"
+													@click="Eliminar(item.id)"
+												>
+													<vue-feather type="trash"></vue-feather>
 												</button>
 											</div>
 										</td>
@@ -91,6 +103,17 @@
 									<input
 										type="number"
 										class="form-control"
+										min="1"
+										maxlength="8"
+										name="dni"
+										@keyup="Validar"
+										:class="[
+											submited
+												? v$.frmDatosAlumno.dni.$invalid
+													? 'is-invalid'
+													: 'is-valid'
+												: '',
+										]"
 										v-model="frmDatosAlumno.dni"
 									/>
 								</div>
@@ -100,6 +123,13 @@
 										type="text"
 										class="form-control mayus"
 										v-model="frmDatosAlumno.nombres"
+										:class="[
+											submited
+												? v$.frmDatosAlumno.nombres.$invalid
+													? 'is-invalid'
+													: 'is-valid'
+												: '',
+										]"
 									/>
 								</div>
 								<div class="form-group col-md-6">
@@ -108,6 +138,13 @@
 										type="text"
 										class="form-control mayus"
 										v-model="frmDatosAlumno.apellido_paterno"
+										:class="[
+											submited
+												? v$.frmDatosAlumno.apellido_paterno.$invalid
+													? 'is-invalid'
+													: 'is-valid'
+												: '',
+										]"
 									/>
 								</div>
 								<div class="form-group col-md-6">
@@ -116,6 +153,13 @@
 										type="text"
 										class="form-control mayus"
 										v-model="frmDatosAlumno.apellido_materno"
+										:class="[
+											submited
+												? v$.frmDatosAlumno.apellido_materno.$invalid
+													? 'is-invalid'
+													: 'is-valid'
+												: '',
+										]"
 									/>
 								</div>
 								<div class="form-group col-md-3">
@@ -123,12 +167,33 @@
 									<input
 										type="number"
 										class="form-control"
+										min="1"
+										maxLength="2"
+										name="edad"
+										@keyup="Validar"
+										:class="[
+											submited
+												? v$.frmDatosAlumno.edad.$invalid
+													? 'is-invalid'
+													: 'is-valid'
+												: '',
+										]"
 										v-model.number="frmDatosAlumno.edad"
 									/>
 								</div>
 								<div class="form-group col-md-4">
 									<label>GÉNERO</label>
-									<select class="form-select" v-model="frmDatosAlumno.genero">
+									<select
+										class="form-select"
+										v-model="frmDatosAlumno.genero"
+										:class="[
+											submited
+												? v$.frmDatosAlumno.genero.$invalid
+													? 'is-invalid'
+													: 'is-valid'
+												: '',
+										]"
+									>
 										<option :value="0" selected disabled>Seleccione...</option>
 										<option value="M">MASCULINO</option>
 										<option value="F">FEMENINO</option>
@@ -140,6 +205,13 @@
 									<select
 										class="form-select"
 										v-model="frmDatosAlumno.estado_matricula"
+										:class="[
+											submited
+												? v$.frmDatosAlumno.estado_matricula.$invalid
+													? 'is-invalid'
+													: 'is-valid'
+												: '',
+										]"
 									>
 										<option :value="0" selected disabled>Seleccione...</option>
 										<option value="REGULAR">REGULAR</option>
@@ -154,6 +226,13 @@
 										type="text"
 										class="form-control"
 										v-model="frmDatosAlumno.email"
+										:class="[
+											submited
+												? v$.frmDatosAlumno.email.$invalid
+													? 'is-invalid'
+													: 'is-valid'
+												: '',
+										]"
 									/>
 								</div>
 							</div>
@@ -173,6 +252,11 @@
 <script>
 import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
+
+import "~/jquery/dist/jquery";
+import "~/datatables.net-dt/js/dataTables.dataTables";
+import "~/datatables.net-dt/css/jquery.dataTables.min.css";
+import $ from "jquery";
 
 import Layout from "@/components/app-layout.vue";
 
@@ -198,6 +282,7 @@ export default {
 			frmDatosAlumno: {
 				modo: "NUEVO",
 				id: null,
+				dni: null,
 				apellido_paterno: null,
 				apellido_materno: null,
 				nombres: null,
@@ -211,16 +296,25 @@ export default {
 
 	validations: {
 		frmDatosAlumno: {
+			dni: { required },
 			apellido_paterno: { required },
 			apellido_materno: { required },
 			nombres: { required },
 			edad: { required },
 			genero: { noZero },
 			estado_matricula: { noZero },
+			email: { required },
 		},
 	},
-
+	watch: {
+		alumnos() {
+			$("#tblAlumnos").DataTable().destroy();
+			this.TablaAlumnos();
+		},
+	},
 	mounted() {
+		this.Listar();
+		this.TablaAlumnos();
 		this.mdlDatosAlumno = new bootstrap.Modal(
 			document.getElementById("mdlDatosAlumno"),
 			{
@@ -229,9 +323,60 @@ export default {
 		);
 	},
 	methods: {
+		Validar(e) {
+			let name = e.target.name;
+			let maxlength = e.target.maxLength;
+			let value = e.target.value;
+
+			if (value.length > maxlength) {
+				value = value.slice(0, maxlength);
+				if (name == "dni") {
+					this.frmDatosAlumno.dni = value;
+				} else if (name == "edad") {
+					this.frmDatosAlumno.edad = value;
+				}
+			}
+		},
+		TablaAlumnos() {
+			this.$nextTick(() => {
+				let table = $("#tblAlumnos").DataTable({
+					scrollY: "350px",
+					scrollX: true,
+					scrollCollapse: true,
+					paging: false,
+					ordering: false,
+					info: true,
+					lengthChange: false,
+					language: {
+						retrieve: true,
+						emptyTable: "No hay datos disponibles en la tabla",
+						info: "Mostrando del _START_ al _END_ de _TOTAL_ registros",
+						infoEmpty: "No se encontraron registros",
+						infoFiltered: "(filtrado de _MAX_ registros)",
+						thousands: ",",
+						paginate: {
+							first: "Primera",
+							last: "Ultima",
+							next: '<i class="fas fa-chevron-circle-right" style="font-size:20px;"></i>',
+							previous:
+								'<i class="fas fa-chevron-circle-left" style="font-size:20px;"></i>',
+						},
+					},
+				});
+			});
+		},
+		async Listar() {
+			let self = this;
+			return await axios
+				.get(this.api_url + "alumnos/listar")
+				.then(function (response) {
+					self.alumnos = response.data;
+				});
+		},
 		Resetear() {
 			this.frmDatosAlumno.modo = "NUEVO";
 			this.frmDatosAlumno.id = null;
+			this.frmDatosAlumno.dni = null;
 			this.frmDatosAlumno.apellido_paterno = null;
 			this.frmDatosAlumno.apellido_materno = null;
 			this.frmDatosAlumno.nombres = null;
@@ -240,9 +385,21 @@ export default {
 			this.frmDatosAlumno.estado_matricula = 0;
 			this.frmDatosAlumno.email = null;
 		},
-		Editar() {},
 		Nuevo() {
 			this.Resetear();
+			this.mdlDatosAlumno.show();
+		},
+		Editar(item) {
+			this.frmDatosAlumno.modo = "EDITAR";
+			this.frmDatosAlumno.id = item.id;
+			this.frmDatosAlumno.dni = item.dni;
+			this.frmDatosAlumno.apellido_paterno = item.apellido_paterno;
+			this.frmDatosAlumno.apellido_materno = item.apellido_materno;
+			this.frmDatosAlumno.nombres = item.nombres;
+			this.frmDatosAlumno.edad = item.edad;
+			this.frmDatosAlumno.genero = item.genero;
+			this.frmDatosAlumno.estado_matricula = item.estado_matricula;
+			this.frmDatosAlumno.email = item.email;
 			this.mdlDatosAlumno.show();
 		},
 		async Guardar() {
@@ -311,9 +468,8 @@ export default {
 
 											return await method
 												.then((response) => {
-													console.log(response);
 													self.submited = false;
-													// self.ListarRecursos();
+													self.Listar();
 													self.mdlDatosAlumno.hide();
 
 													return self.$swal.fire({
@@ -335,16 +491,58 @@ export default {
 					}
 				});
 		},
+		Eliminar(alumno_id) {
+			let self = this;
+			this.$swal
+				.fire({
+					title: "¿Desea elimar el registro?",
+					confirmButtonText: "Si",
+					showCancelButton: true,
+					cancelButtonText: "No",
+					allowOutsideClick: false,
+					backdrop: true,
+				})
+				.then((result) => {
+					if (result.isConfirmed) {
+						self.$swal.fire({
+							title: "ELIMINANDO...",
+							showConfirmButton: false,
+							allowOutsideClick: false,
+							willOpen: async () => {
+								self.$swal.showLoading();
+
+								return await axios
+									.delete(self.api_url + "alumnos/eliminar/" + alumno_id)
+									.then((response) => {
+										self.Listar();
+										return self.$swal.fire({
+											icon: "success",
+											title: "¡ÉXITO!",
+											timer: 1200,
+											showConfirmButton: false,
+										});
+									})
+									.catch((error) => {
+										self.$swal.showValidationMessage(
+											`Ha ocurrido un error: ${error}`
+										);
+									});
+							},
+						});
+					}
+				});
+		},
 	},
 };
 </script>
 
 <style lang="scss">
+@import "datatables.net-dt";
+
 .mayus {
 	text-transform: uppercase;
 }
 .slot-alumnos {
-	width: 70%;
-	margin-left: 15%;
+	width: 100%;
 }
 </style>

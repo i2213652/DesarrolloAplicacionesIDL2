@@ -22,7 +22,7 @@ return new class extends Migration
             $table->tinyInteger('edad');
             $table->string('genero', 20);
             $table->string('estado_matricula', 20);
-            $table->string('email', 50)->nullable();
+            $table->string('email', 50);
 
             $table->timestamps();
         });

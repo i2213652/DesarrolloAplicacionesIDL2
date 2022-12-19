@@ -10,7 +10,7 @@ class AlumnoController extends Controller
 {
     public function listar()
     {
-        $alumnos = Alumno::all();
+        $alumnos = Alumno::orderBy('id', 'asc')->get();
 
         return $alumnos;
     }
@@ -62,11 +62,11 @@ class AlumnoController extends Controller
 
         $alumno = Alumno::find($id);
 
-        $alumno->dni = $frmDatosAlumno['dni'];
+        $alumno->dni =  $frmDatosAlumno['dni'];
         $alumno->apellido_paterno = mb_strtoupper(trim($frmDatosAlumno['apellido_paterno']));
         $alumno->apellido_materno = mb_strtoupper(trim($frmDatosAlumno['apellido_materno']));
         $alumno->nombres = mb_strtoupper(trim($frmDatosAlumno['nombres']));
-        $alumno->edad = $frmDatosAlumno['edad'];
+        $alumno->edad =  $frmDatosAlumno['edad'];
         $alumno->genero = $frmDatosAlumno['genero'];
         $alumno->estado_matricula = $frmDatosAlumno['estado_matricula'];
         $alumno->email = $frmDatosAlumno['email'];
